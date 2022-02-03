@@ -176,6 +176,8 @@ class GoPro(GoProBle, GoProWifi, Generic[BleDevice]):
         self._enable_wifi_during_init = enable_wifi
         self._maintain_ble = maintain_ble
 
+        self.id = target
+
         # Initialize GoPro Communication Client
         GoProBle.__init__(self, ble_adapter(), self._disconnect_handler, self._notification_handler, target)
         GoProWifi.__init__(self, wifi_adapter(wifi_interface))
@@ -582,8 +584,10 @@ class GoPro(GoProBle, GoProWifi, Generic[BleDevice]):
 
     def _close_ble(self) -> None:
         if self.is_ble_connected and self._ble is not None:
+            # Clear the disconnect event handler to allow disconnect handler to pass and reset
             self._ble_disconnect_event.clear()
             self._ble.close()
+            # This waits on the disconnect handler to reset the disconnection event
             self._ble_disconnect_event.wait()
 
     def _disconnect_handler(self, _: Any) -> None:
